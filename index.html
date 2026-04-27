@@ -1,197 +1,166 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Admin Panel</title>
+<title>Pro Admin Panel</title>
 
 <style>
 body {
-  margin: 0;
-  font-family: Arial;
-  background: linear-gradient(135deg, #06162c, #0a2a4a);
-  color: white;
-  text-align: center;
+  margin:0;
+  font-family:Arial;
+  background:#061a2e;
+  color:white;
+  display:flex;
 }
 
-/* fade in animation */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+/* SIDEBAR */
+#sidebar {
+  width:220px;
+  height:100vh;
+  background:#0b2b4d;
+  padding-top:20px;
 }
 
-h1 {
-  margin-top: 30px;
-  animation: fadeIn 0.6s ease;
-}
-
-/* login box */
-#login {
-  margin-top: 50px;
-  animation: fadeIn 0.6s ease;
-}
-
-input {
-  padding: 12px;
-  margin: 6px;
-  border-radius: 8px;
-  border: none;
-  outline: none;
-  width: 200px;
-}
-
-/* buttons */
-button {
-  padding: 12px 18px;
-  background: #1e5aa8;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-button:hover {
-  background: #2d7de0;
-  transform: scale(1.05);
-}
-
-/* tabs */
 .tab {
-  display: inline-block;
-  padding: 12px 18px;
-  margin: 10px;
-  background: #123a6b;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: 0.2s;
+  margin:10px;
+  padding:12px;
+  background:#123a6b;
+  border-radius:10px;
+  cursor:pointer;
+  text-align:center;
+  transition:0.2s;
+}
+.tab:hover { background:#1e5aa8; }
+
+/* MAIN */
+#main {
+  margin-left:230px;
+  padding:20px;
+  width:100%;
 }
 
-.tab:hover {
-  background: #1e5aa8;
-  transform: translateY(-2px);
+/* LOGIN */
+#login {
+  margin:auto;
+  margin-top:150px;
+  text-align:center;
 }
 
-/* panel */
-.panel {
-  margin-top: 20px;
-  animation: fadeIn 0.3s ease;
+/* INPUTS */
+input {
+  padding:10px;
+  margin:5px;
+  border-radius:8px;
+  border:none;
 }
 
-/* output box */
-#out {
-  margin-top: 10px;
-  padding: 10px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 10px;
-  max-width: 500px;
-  margin-left: auto;
-  margin-right: auto;
-  text-align: left;
-  animation: fadeIn 0.3s ease;
+/* BUTTON */
+button {
+  padding:10px 15px;
+  background:#1e5aa8;
+  color:white;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+}
+button:hover { background:#2d7de0; }
+
+/* CARD */
+.card {
+  background:rgba(255,255,255,0.05);
+  padding:10px;
+  margin:8px;
+  border-radius:8px;
 }
 </style>
-
 </head>
 
 <body>
 
-<h1>Admin Dashboard</h1>
-
+<!-- LOGIN -->
 <div id="login">
+  <h2>Login</h2>
   <input id="pass" placeholder="Password">
-  <br>
+  <br><br>
   <button onclick="login()">Login</button>
 </div>
 
-<div id="main" style="display:none;">
-
+<!-- APP -->
+<div id="sidebar" style="display:none;">
   <div class="tab" onclick="tab('kick')">Kick</div>
   <div class="tab" onclick="tab('ban')">Ban</div>
   <div class="tab" onclick="tab('warn')">Warn</div>
   <div class="tab" onclick="tab('history')">History</div>
+</div>
 
-  <div class="panel" id="panel"></div>
-
+<div id="main" style="display:none;">
+  <h2>Dashboard</h2>
+  <div id="content"></div>
 </div>
 
 <script>
-const API = "http://87.106.155.7:12281"; // FIXED (no trailing slash)
+const API = "http://87.106.155.7:12281";
 
-// LOGIN
-function login() {
-  fetch(API + "/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      password: document.getElementById("pass").value
-    })
+let selected=null;
+
+/* LOGIN FIXED */
+function login(){
+  fetch(API+"/login",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({password:document.getElementById("pass").value})
   })
-  .then(r => r.json())
-  .then(d => {
-    if (d.status) {
-      document.getElementById("login").style.display = "none";
-      document.getElementById("main").style.display = "block";
-    } else {
-      alert("❌ Wrong password");
-    }
-  })
-  .catch(() => alert("❌ Server error"));
+  .then(r=>r.json())
+  .then(d=>{
+    if(d.status==="ok"){
+      document.getElementById("login").style.display="none";
+      document.getElementById("sidebar").style.display="block";
+      document.getElementById("main").style.display="block";
+    } else alert("Wrong password");
+  });
 }
 
-// TABS
-function tab(t) {
-  let html = "";
+/* TABS */
+function tab(t){
+  let html="";
 
-  if (t !== "history") {
-    html = `
-      <input id="user" placeholder="User ID"><br>
+  if(t!=="history"){
+    html=`
+      <input id="uid" placeholder="User ID"><br>
       <input id="reason" placeholder="Reason"><br><br>
-      <button onclick="send('${t}')">Execute ${t}</button>
+      <button onclick="send('${t}')">Execute</button>
     `;
   } else {
-    html = `
-      <input id="user" placeholder="User ID"><br><br>
-      <button onclick="getHistory()">Get History</button>
+    html=`
+      <input id="uid" placeholder="User ID"><br><br>
+      <button onclick="load()">Load History</button>
       <div id="out"></div>
     `;
   }
 
-  document.getElementById("panel").innerHTML = html;
+  document.getElementById("content").innerHTML=html;
 }
 
-// SEND ACTIONS
-function send(type) {
-  fetch(API + "/" + type, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      user_id: document.getElementById("user").value,
-      reason: document.getElementById("reason").value
+/* ACTIONS */
+function send(type){
+  fetch(API+"/"+type,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      user_id:document.getElementById("uid").value,
+      reason:document.getElementById("reason").value
     })
-  })
-  .then(r => r.json())
-  .then(d => {
-    alert(JSON.stringify(d));
-  })
-  .catch(() => alert("❌ Failed request"));
+  }).then(r=>r.json()).then(alert);
 }
 
-// HISTORY
-function getHistory() {
-  let u = document.getElementById("user").value;
+/* HISTORY */
+function load(){
+  let id=document.getElementById("uid").value;
 
-  fetch(API + "/history/" + u)
-  .then(r => r.json())
-  .then(d => {
-    if (!Array.isArray(d)) {
-      document.getElementById("out").innerHTML = "No data";
-      return;
-    }
-
+  fetch(API+"/history/"+id)
+  .then(r=>r.json())
+  .then(d=>{
     document.getElementById("out").innerHTML =
-      d.map(x => `• [${x[2]}] ${x[0]} - ${x[1]}`).join("<br>");
-  })
-  .catch(() => {
-    document.getElementById("out").innerHTML = "Error loading history";
+      d.map(x=>`<div class="card">${x[0]} - ${x[1]} (${x[2]})</div>`).join("");
   });
 }
 </script>
