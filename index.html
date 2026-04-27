@@ -1,1 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Panel</title>
+<style>
+body {
+  background: #0a1a2f;
+  color: white;
+  font-family: Arial;
+  text-align: center;
+}
+.tab {
+  display:inline-block;
+  padding:15px;
+  margin:10px;
+  background:#123a6b;
+  border-radius:10px;
+  cursor:pointer;
+}
+.panel {
+  margin-top:20px;
+}
+input {
+  padding:10px;
+  margin:5px;
+}
+button {
+  padding:10px;
+  background:#1e5aa8;
+  color:white;
+  border:none;
+}
+</style>
+</head>
 
+<body>
+
+<h1>Admin Dashboard</h1>
+
+<div id="login">
+  <input id="pass" placeholder="Password">
+  <button onclick="login()">Login</button>
+</div>
+
+<div id="main" style="display:none;">
+  <div class="tab" onclick="tab('kick')">Kick</div>
+  <div class="tab" onclick="tab('ban')">Ban</div>
+  <div class="tab" onclick="tab('warn')">Warn</div>
+  <div class="tab" onclick="tab('history')">History</div>
+
+  <div class="panel" id="panel"></div>
+</div>
+
+<script>
+const API = "http://YOUR_IP:3000";
+
+function login() {
+  fetch(API+"/login", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({password:document.getElementById("pass").value})
+  })
+  .then(r=>r.json())
+  .then(d=>{
+    if(d.status){
+      document.getElementById("login").style.display="none";
+      document.getElementById("main").style.display="block";
+    } else alert("Wrong password");
+  });
+}
+
+function tab(t){
+  let html="";
+  if(t!="history"){
+    html=`
+    <input id="user" placeholder="User ID"><br>
+    <input id="reason" placeholder="Reason"><br>
+    <button onclick="send('${t}')">${t}</button>`;
+  } else {
+    html=`
+    <input id="user" placeholder="User ID"><br>
+    <button onclick="getHistory()">Get</button>
+    <div id="out"></div>`;
+  }
+  document.getElementById("panel").innerHTML=html;
+}
+
+function send(t){
+  fetch(API+"/"+t,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      user_id:document.getElementById("user").value,
+      reason:document.getElementById("reason").value
+    })
+  }).then(r=>r.json()).then(alert);
+}
+
+function getHistory(){
+  let u=document.getElementById("user").value;
+  fetch(API+"/history/"+u)
+  .then(r=>r.json())
+  .then(d=>{
+    document.getElementById("out").innerHTML=
+      d.map(x=>`[${x[2]}] ${x[0]} - ${x[1]}`).join("<br>");
+  });
+}
+</script>
+
+</body>
+</html>
